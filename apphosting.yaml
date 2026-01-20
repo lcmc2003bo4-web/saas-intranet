@@ -1,0 +1,14 @@
+kind: AppStack
+runtime: nodejs20
+
+env:
+  - variable: DATABASE_URL
+    secret: DATABASE_URL_SECRET
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    value: https://your-project.supabase.co
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: your-anon-key
+  - variable: NEXTAUTH_SECRET
+    secret: NEXTAUTH_SECRET
+  - variable: NEXTAUTH_URL
+    value: https://your-app.web.app
