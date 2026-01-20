@@ -1,7 +1,0 @@
-runConfig:
-  environmentVariables:
-    - variable: DATABASE_URL
-    - variable: NEXTAUTH_SECRET
-    - variable: NEXTAUTH_URL
-    - variable: NEXT_PUBLIC_SUPABASE_URL
-    - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
