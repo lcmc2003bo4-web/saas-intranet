@@ -5,10 +5,12 @@ env:
   - variable: DATABASE_URL
     secret: DATABASE_URL_SECRET
   - variable: NEXT_PUBLIC_SUPABASE_URL
-    value: https://your-project.supabase.co
+    value: https://cefovdciiobrqyvdyjcm.supabase.co
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    value: your-anon-key
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlZm92ZGNpaW9icnF5dmR5amNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NzUwNTYsImV4cCI6MjA4NDQ1MTA1Nn0.S0TLS2lejKtvp5T6a0ErC77wyVpD9Ll9kShYZg5ckSw
   - variable: NEXTAUTH_SECRET
     secret: NEXTAUTH_SECRET
   - variable: NEXTAUTH_URL
-    value: https://your-app.web.app
+    value: https://saas-intranet.web.app
+  - variable: DATABASE_URL_SECRET
+    secret: DATABASE_URL_SECRET
