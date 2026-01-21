@@ -9,58 +9,36 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
-  DEV
+enum UserRole {
+  super_admin
+  director
+  admin
+  teacher
+  student
+  parent
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // Hashed
-  name      String?
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Profile Relations
-  studentProfile StudentProfile?
-  teacherProfile TeacherProfile?
-  adminProfile   AdminProfile?
-  devProfile     DevProfile?
-}
-
-model StudentProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model School {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  logo_url  String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
   
-  gradeLevel String
-  tuitionStatus String // e.g., "PAID", "LATE", "PENDING"
-  // Relations to Grades, Schedule, etc. would go here
+  profiles  UserProfile[]
+
+  @@map("schools")
 }
 
-model TeacherProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  department String?
-  // Relations to Classes, Subjects
-}
+model UserProfile {
+  id         String   @id @db.Uuid
+  school_id  String   @db.Uuid
+  school     School   @relation(fields: [school_id], references: [id])
+  role       UserRole @default(student)
+  full_name  String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
 
-model AdminProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  permissions String[] // Specific admin permissions
-}
-
-model DevProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("users_profile")
 }

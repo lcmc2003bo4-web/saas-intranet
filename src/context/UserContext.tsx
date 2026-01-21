@@ -1,13 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserContextType, UserProfile, School, UserRole } from '@/types/auth';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+    const supabase = createClient();
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [school, setSchool] = useState<School | null>(null);
@@ -19,32 +20,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(true);
             setError(null);
 
-            // Fetch Profile
-            const { data: profileData, error: profileError } = await supabase
+            // Fetch Profile with School in a single query (optimization)
+            const { data, error: fetchError } = await supabase
                 .from('users_profile')
-                .select('*')
+                .select('*, schools(*)')
                 .eq('id', currentUser.id)
                 .single();
 
-            if (profileError) throw profileError;
-            if (!profileData) throw new Error('Profile not found');
+            if (fetchError) throw fetchError;
+            if (!data) throw new Error('Profile not found');
 
-            // Fetch School
-            const { data: schoolData, error: schoolError } = await supabase
-                .from('schools')
-                .select('*')
-                .eq('id', profileData.school_id)
-                .single();
-
-            if (schoolError) throw schoolError;
-            if (!schoolData) throw new Error('School not found');
+            const { schools, ...profileData } = data;
 
             setProfile(profileData as UserProfile);
-            setSchool(schoolData as School);
+            setSchool(schools as School);
         } catch (err: any) {
             console.error('Error fetching user details:', err);
             setError(err);
-            // Clear state on error to prevent inconsistent UI
             setProfile(null);
             setSchool(null);
         } finally {

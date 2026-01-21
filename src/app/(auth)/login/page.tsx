@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/context/UserContext';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
+    const supabase = createClient();
     const { user, profile, isLoading: isUserLoading } = useUser();
 
     const [email, setEmail] = useState('');

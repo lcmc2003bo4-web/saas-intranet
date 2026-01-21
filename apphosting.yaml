@@ -12,5 +12,3 @@ env:
     secret: NEXTAUTH_SECRET
   - variable: NEXTAUTH_URL
     value: https://saas-intranet.web.app
-  - variable: DATABASE_URL_SECRET
-    secret: DATABASE_URL_SECRET

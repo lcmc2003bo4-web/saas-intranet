@@ -1,9 +1,10 @@
 'use client';
 
 import { useUser } from '@/context/UserContext';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { LogOut, Menu, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface TopbarProps {
     onMenuClick: () => void;
@@ -12,6 +13,7 @@ interface TopbarProps {
 export default function Topbar({ onMenuClick }: TopbarProps) {
     const { school, profile } = useUser();
     const router = useRouter();
+    const supabase = createClient();
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -29,8 +31,13 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                 </button>
                 <div className="flex ml-4 md:ml-0 items-center">
                     {school?.logo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={school.logo_url} alt="Logo" className="h-8 w-auto mr-3" />
+                        <Image
+                            src={school.logo_url}
+                            alt="Logo Institucional"
+                            width={32}
+                            height={32}
+                            className="h-8 w-auto mr-3 object-contain"
+                        />
                     ) : (
                         <div className="h-8 w-8 bg-blue-100 rounded flex items-center justify-center text-blue-700 font-bold mr-3">
                             {school?.name?.substring(0, 1) || 'S'}
@@ -62,6 +69,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                     onClick={handleSignOut}
                     className="p-1 rounded-full text-gray-400 hover:text-red-600 transition-colors"
                     title="Cerrar Sesión"
+                    aria-label="Cerrar Sesión"
                 >
                     <LogOut className="h-5 w-5" />
                 </button>
