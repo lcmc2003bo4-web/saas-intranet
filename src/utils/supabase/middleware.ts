@@ -32,16 +32,65 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    const pathname = request.nextUrl.pathname
+
+    // 1. If NO user and trying to access protected routes -> redirect to login
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/auth') &&
-        request.nextUrl.pathname !== '/'
+        !pathname.startsWith('/login') &&
+        !pathname.startsWith('/auth') &&
+        pathname !== '/'
     ) {
-        // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
+    }
+
+    // 2. If user IS logged in
+    if (user) {
+        // Redirect from login to dashboard
+        if (pathname.startsWith('/login')) {
+            // We need to know the role to redirect. Fetching role...
+            const { data: profile } = await supabase
+                .from('users_profile')
+                .select('role')
+                .eq('id', user.id)
+                .single()
+
+            const role = profile?.role
+            const url = request.nextUrl.clone()
+
+            if (['super_admin', 'director', 'admin'].includes(role)) {
+                url.pathname = '/admin/dashboard'
+            } else if (role === 'teacher') {
+                url.pathname = '/teacher/dashboard'
+            } else {
+                url.pathname = '/student/dashboard'
+            }
+            return NextResponse.redirect(url)
+        }
+
+        // 3. Role-based Route Protection
+        // Fetch role if we are in a dashboard route
+        if (pathname.startsWith('/admin') || pathname.startsWith('/teacher') || pathname.startsWith('/student')) {
+            const { data: profile } = await supabase
+                .from('users_profile')
+                .select('role')
+                .eq('id', user.id)
+                .single()
+
+            const role = profile?.role
+
+            if (pathname.startsWith('/admin') && !['super_admin', 'director', 'admin'].includes(role)) {
+                return NextResponse.redirect(new URL('/login', request.url))
+            }
+            if (pathname.startsWith('/teacher') && role !== 'teacher') {
+                return NextResponse.redirect(new URL('/login', request.url))
+            }
+            if (pathname.startsWith('/student') && !['student', 'parent'].includes(role)) {
+                return NextResponse.redirect(new URL('/login', request.url))
+            }
+        }
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
