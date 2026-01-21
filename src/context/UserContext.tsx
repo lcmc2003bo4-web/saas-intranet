@@ -34,9 +34,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             setProfile(profileData as UserProfile);
             setSchool(schools as School);
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error fetching user details:', err);
-            setError(err);
+            setError(err instanceof Error ? err : new Error('An unknown error occurred'));
             setProfile(null);
             setSchool(null);
         } finally {

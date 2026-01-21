@@ -56,9 +56,21 @@ export default function LoginPage() {
             if (error) throw error;
 
             // Redirect will be handled by the useEffect once UserContext updates
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Login error:', err);
-            setError(err.message || 'Error al iniciar sesión');
+            let errorMessage = 'Error al iniciar sesión';
+
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            } else if (typeof err === 'object' && err !== null && 'message' in err) {
+                errorMessage = (err as { message: string }).message;
+            }
+
+            if (errorMessage === 'Invalid login credentials') {
+                errorMessage = 'Credenciales incorrectas. Por favor verifique su correo y contraseña.';
+            }
+
+            setError(errorMessage);
             setIsLoading(false);
         }
     };

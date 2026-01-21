@@ -90,6 +90,11 @@ export async function updateSession(request: NextRequest) {
             if (pathname.startsWith('/student') && !['student', 'parent'].includes(role)) {
                 return NextResponse.redirect(new URL('/login', request.url))
             }
+
+            // Protect DEV routes (Super Admin only)
+            if (pathname.startsWith('/dev') && role !== 'super_admin') {
+                return NextResponse.redirect(new URL('/login', request.url))
+            }
         }
     }
 
