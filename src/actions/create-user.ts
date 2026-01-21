@@ -2,17 +2,6 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-        },
-    }
-)
-
 type CreateUserParams = {
     email: string
     password?: string
@@ -24,15 +13,32 @@ type CreateUserParams = {
 }
 
 export async function createUser(params: CreateUserParams) {
+    // 1. Validación de Entorno
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('CRÍTICO: No se encontró la SUPABASE_SERVICE_ROLE_KEY')
+        return { success: false, error: 'CRÍTICO: No se encontró la SUPABASE_SERVICE_ROLE_KEY en las variables de entorno.' }
+    }
+
     try {
+        // Inicializar cliente dentro del try para capturar posibles errores de configuración
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false,
+                },
+            }
+        )
+
         const password = params.password || generateTemporaryPassword()
 
-        // 1. Create user in Supabase Auth
-        // The trigger in SQL will automatically handle the profile creation in `users_profile` table
+        // 2. Crear usuario en Supabase Auth
         const { data, error } = await supabaseAdmin.auth.admin.createUser({
             email: params.email,
             password: password,
-            email_confirm: true, // Auto-confirm email since admin created it
+            email_confirm: true,
             user_metadata: {
                 full_name: `${params.first_name} ${params.last_name}`,
                 dni: params.dni,
@@ -61,25 +67,39 @@ export async function createUser(params: CreateUserParams) {
         }
 
     } catch (error: any) {
-        console.error('Server Action Error:', error)
-        return { success: false, error: error.message || 'Error interno del servidor' }
+        // 3. Retorno Controlado (No throw)
+        console.error('Server Action Error (Catch Block):', error)
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Error inesperado al crear usuario'
+        }
     }
 }
 
 function generateTemporaryPassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
     let password = ''
-    // Generate a reasonably secure random password
-    const array = new Uint32Array(12)
-    if (typeof crypto !== 'undefined') {
-        crypto.getRandomValues(array)
-    } else {
-        // Fallback for environments where crypto might not be available (though it should be in Node 20)
-        for (let i = 0; i < 12; i++) array[i] = Math.floor(Math.random() * chars.length)
+
+    // Usar crypto para mejor seguridad si está disponible
+    try {
+        const array = new Uint32Array(12)
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            crypto.getRandomValues(array)
+            for (let i = 0; i < 12; i++) {
+                password += chars[array[i] % chars.length]
+            }
+        } else {
+            // Fallback para entornos donde crypto no esté completo (aunque en Node 20 debería estarlo)
+            for (let i = 0; i < 12; i++) {
+                password += chars[Math.floor(Math.random() * chars.length)]
+            }
+        }
+    } catch (e) {
+        // Fallback final
+        for (let i = 0; i < 12; i++) {
+            password += chars[Math.floor(Math.random() * chars.length)]
+        }
     }
 
-    for (let i = 0; i < 12; i++) {
-        password += chars[array[i] % chars.length]
-    }
-    return `Colegio2026!${password.substring(0, 4)}` // Easier format requested by user: Colegio2026! + random suffix
+    return `Colegio2026!${password.substring(0, 4)}`
 }
