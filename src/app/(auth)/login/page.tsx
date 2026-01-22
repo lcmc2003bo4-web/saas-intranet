@@ -9,7 +9,7 @@ import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 export default function LoginPage() {
     const router = useRouter();
     const supabase = createClient();
-    const { user, profile, isLoading: isUserLoading } = useUser();
+    const { user, profile, isLoading: isUserLoading, error: userContextError } = useUser();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -22,6 +22,17 @@ export default function LoginPage() {
             handleRedirect(profile.role);
         }
     }, [user, profile, isUserLoading]);
+
+    // Handle context errors or missing profile state
+    useEffect(() => {
+        if (userContextError) {
+            setError(userContextError.message);
+            setIsLoading(false);
+        } else if (!isUserLoading && user && !profile) {
+            setError('Error: Usuario identificado pero sin perfil de acceso. Contacte a soporte.');
+            setIsLoading(false);
+        }
+    }, [userContextError, isUserLoading, user, profile]);
 
     const handleRedirect = (role: string) => {
         switch (role) {
